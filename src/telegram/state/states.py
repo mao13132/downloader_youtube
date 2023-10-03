@@ -9,6 +9,8 @@ from settings import LOGO
 from src.telegram.keyboard.keyboards import Admin_keyb
 from src.telegram.sendler.sendler import Sendler_msg
 
+from src.telegram.bot_core import BotDB
+
 
 class States(StatesGroup):
     test = State()
@@ -39,19 +41,22 @@ async def add_link(message: Message, state: FSMContext):
         valid_video = False
 
     if not valid_video:
-        error = 'К сожалению, вы отправили ссылку не с YouTube, либо не подходящую ссылку.\n' \
-                'Чтобы ссылка заработала, зайдите на YouTube под видео, которое хотите скачать и скопируйте ' \
-                'рабочую ссылку'
+        error = 'К сожалению, вы отправили ссылку не с YouTube, либо не подходящую ссылку.\nЧтобы ссылка заработала, ' \
+                'зайдите на YouTube под видео, которое хотите скачать и скопируйте рабочую ссылку'
 
-        keyb = Admin_keyb().youtube()
+        keyb = Admin_keyb().start_keyb()
 
         await Sendler_msg().new_sendler_photo_message(message, LOGO, error, keyb)
+
+        await state.finish()
 
         return False
 
     _msg = f'Выберите качество, в котором хотите скачать видео:'
 
-    keyb = Admin_keyb().download_video()
+    id_pk = BotDB.add_link(id_user, link)
+
+    keyb = Admin_keyb().download_video(id_pk)
 
     await message.bot.send_photo(id_user, photo=preview, caption=_msg, reply_markup=keyb)
 

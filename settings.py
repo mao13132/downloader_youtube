@@ -11,3 +11,5 @@ ADMIN = ['331583382']
 TOKEN = os.getenv('TOKEN')
 
 LOGO = r'src/telegram/media/logo.jpg'
+
+dir_project = os.getcwd()

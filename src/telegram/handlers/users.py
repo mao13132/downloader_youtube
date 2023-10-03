@@ -19,7 +19,7 @@ async def start(message: Message):
 
     user_name = message.chat.first_name if message.chat.first_name is not None else message.chat.username
 
-    _msg = f'Здравствуйте {user_name}! Что вам требуется от бота?'
+    _msg = f'Здравствуйте {user_name}! Что вам от меня требуется?'
 
     keyb = Admin_keyb().start_keyb()
 

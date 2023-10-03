@@ -8,6 +8,7 @@ from src.sql.bot_connector import BotDB
 
 bot = Bot(token=TOKEN)
 
+
 # logger = logging.getLogger()
 #
 # logging.basicConfig(handlers=[logging.FileHandler(filename="./logs.txt",
@@ -25,5 +26,4 @@ class Core:
         self.storage = storage
         self.dp = dp
         self.BotDB = BotDB
-        print(f'Бот запущен')
-        print()
+        print(f'Бот запущен\n')

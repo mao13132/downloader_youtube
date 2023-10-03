@@ -68,6 +68,36 @@ class BotDB:
 
         return False
 
+    def add_link(self, id_user, link):
+
+        now_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        self.cursor.execute("INSERT OR IGNORE INTO links ('id_user', 'link',"
+                            "'create_date') VALUES (?,?,?)",
+                            (id_user, link,
+                             now_date))
+
+        self.conn.commit()
+
+        return self.cursor.lastrowid
+
+    def get_link(self, id_pk):
+        try:
+
+            result = self.cursor.execute(f"SELECT link FROM links "
+                                         f"WHERE id_pk = '{id_pk}'")
+
+            response = result.fetchall()
+
+            response = response[0][0]
+
+
+        except Exception as es:
+            print(f'Ошибка SQL get_link: {es}')
+            return False
+
+        return response
+
     def close(self):
         self.conn.close()
         print('Отключился от SQL BD')
