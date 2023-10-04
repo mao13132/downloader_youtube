@@ -8,7 +8,6 @@ from src.sql.bot_connector import BotDB
 
 bot = Bot(token=TOKEN)
 
-
 # logger = logging.getLogger()
 #
 # logging.basicConfig(handlers=[logging.FileHandler(filename="./logs.txt",

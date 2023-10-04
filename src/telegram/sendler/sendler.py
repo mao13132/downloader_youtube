@@ -184,6 +184,17 @@ class Sendler_msg:
 
         return True
 
+    async def new_sendler_message(self, message, text, keyb):
+
+        try:
+            await message.bot.send_message(message.chat.id, text,
+                                                reply_markup=keyb)
+        except Exception as es:
+            print(f'Ошибка при отправке сообщения new_sendler_message_message с фото {es}')
+            return False
+
+        return True
+
     async def sendler_photo_call_html(self, call, photo, text, keyb):
         try:
             with open(photo, 'rb') as file:

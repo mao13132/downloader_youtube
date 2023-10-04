@@ -40,16 +40,17 @@ class DownloadVideo:
         video = open(result_dict['result'], 'rb')
 
         try:
-            await call.bot.send_document(id_user, video)
+            await call.bot.send_video(id_user, video)
         except Exception as es:
 
             delete_file(result_dict['result'])
 
             if 'File too large for uploading. Check telegram api limit' in str(es):
-                error = f'Размер видео превышает лимиты telegram по отправке файлов через ботов подробности ' \
+                error = f'У пользователя ID: {id_user} ошибка. Размер видео превышает лимиты telegram по отправке ' \
+                        f'файлов через ботов подробности ' \
                         f'https://core.telegram.org/bots/api#senddocument'
 
-                error_user = f'Файл не может быть передан, слишком большой размер'
+                error_user = f'У пользователя ID: {id_user} ошибка. Файл не может быть передан, слишком большой размер'
 
                 print(error)
 
@@ -61,7 +62,7 @@ class DownloadVideo:
 
                 return False
 
-            error = (f'Не могу выслать файл пользователю {id_user} "{es}"')
+            error = (f'У пользователя ID: {id_user} ошибка. Не могу выслать файл пользователю {id_user} "{es}"')
 
             print(error)
 
@@ -75,7 +76,7 @@ class DownloadVideo:
 
         over_msg = f'Надеюсь, я смог вам помочь 👉👈. Что-то еще?'
 
-        keyb = Admin_keyb().start_keyb()
+        keyb = Admin_keyb().start_keyb(id_user)
 
         await Sendler_msg().new_sendler_photo_call(call, LOGO, over_msg, keyb)
 

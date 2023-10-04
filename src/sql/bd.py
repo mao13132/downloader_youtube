@@ -39,6 +39,19 @@ class BotDB:
 
         try:
             self.cursor.execute(f"CREATE TABLE IF NOT EXISTS "
+                                f"response_word (id_pk INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                f"search_word TEXT, "
+                                f"response_type TEXT, "
+                                f"response_text TEXT, "
+                                f"response_file TEXT, "
+                                f"tag TEXT, "
+                                f"other TEXT)")
+
+        except Exception as es:
+            print(f'SQL исключение response_word {es}')
+
+        try:
+            self.cursor.execute(f"CREATE TABLE IF NOT EXISTS "
                                 f"links (id_pk INTEGER PRIMARY KEY AUTOINCREMENT, "
                                 f"id_user TEXT, "
                                 f"link TEXT, "
@@ -81,6 +94,16 @@ class BotDB:
 
         return self.cursor.lastrowid
 
+    def add_response_msg(self, search_word, _type_msg, _sql_file_patch, _text_response, tag):
+        self.cursor.execute("INSERT OR IGNORE INTO response_word ('search_word', 'response_type',"
+                            "'response_file', 'response_text', 'tag') VALUES (?,?,?,?,?)",
+                            (search_word, _type_msg,
+                             _sql_file_patch, _text_response, tag))
+
+        self.conn.commit()
+
+        return self.cursor.lastrowid
+
     def get_link(self, id_pk):
         try:
 
@@ -94,6 +117,31 @@ class BotDB:
 
         except Exception as es:
             print(f'Ошибка SQL get_link: {es}')
+            return False
+
+        return response
+
+    def get_all_users(self):
+
+        result = self.cursor.execute(f"SELECT * FROM users")
+
+        response = result.fetchall()
+
+        return response
+
+    def get_response_word_from_id_pk(self, id_pk):
+        try:
+
+            result = self.cursor.execute(f"SELECT * FROM response_word "
+                                         f"WHERE id_pk = '{id_pk}'")
+
+            response = result.fetchall()
+
+            response = response[0]
+
+
+        except Exception as es:
+            print(f'Ошибка SQL get_response_word_from_id_pk: {es}')
             return False
 
         return response
