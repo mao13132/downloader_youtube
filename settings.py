@@ -12,4 +12,6 @@ TOKEN = os.getenv('TOKEN')
 
 LOGO = r'src/telegram/media/logo.jpg'
 
+VIDEO_TYPE = ['360', '480', '720', '1080']
+
 dir_project = os.getcwd()

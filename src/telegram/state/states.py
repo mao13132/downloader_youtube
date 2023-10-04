@@ -5,7 +5,7 @@ from aiogram.types import Message
 
 from pytube import YouTube
 
-from settings import LOGO
+from settings import LOGO, VIDEO_TYPE
 from src.telegram.keyboard.keyboards import Admin_keyb
 from src.telegram.sendler.sendler import Sendler_msg
 
@@ -27,6 +27,23 @@ async def test(message: Message, state: FSMContext):
     await state.finish()
 
 
+async def search_type(video):
+    good_type = []
+
+    for _type in video.fmt_streams:
+
+        type = str(_type.resolution)[:-1]
+
+        if type in VIDEO_TYPE:
+            good_type.append(int(type))
+
+    if good_type != []:
+        good_type = sorted(good_type)
+        good_type = set(good_type)
+
+    return good_type
+
+
 async def add_link(message: Message, state: FSMContext):
     link = message.text
 
@@ -34,8 +51,13 @@ async def add_link(message: Message, state: FSMContext):
 
     id_user = message.chat.id
 
+    one_msg = await message.bot.send_message(id_user, 'Определяю варианты качества видео...')
+
     try:
         video = YouTube(link)
+
+        good_type = await search_type(video)
+
         preview = video.thumbnail_url
     except:
         valid_video = False
@@ -46,7 +68,9 @@ async def add_link(message: Message, state: FSMContext):
 
         keyb = Admin_keyb().start_keyb()
 
-        await Sendler_msg().new_sendler_photo_message(message, LOGO, error, keyb)
+        # await Sendler_msg().new_sendler_photo_message(message, LOGO, error, keyb)
+
+        await message.bot.edit_message_text(error, id_user, one_msg.message_id)
 
         await state.finish()
 
@@ -56,7 +80,12 @@ async def add_link(message: Message, state: FSMContext):
 
     id_pk = BotDB.add_link(id_user, link)
 
-    keyb = Admin_keyb().download_video(id_pk)
+    keyb = Admin_keyb().download_video(id_pk, good_type)
+
+    try:
+        await message.bot.delete_message(id_user, one_msg.message_id)
+    except:
+        pass
 
     await message.bot.send_photo(id_user, photo=preview, caption=_msg, reply_markup=keyb)
 

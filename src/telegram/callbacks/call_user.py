@@ -1,3 +1,6 @@
+import asyncio
+import threading
+
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 
@@ -8,7 +11,7 @@ from src.telegram.state.states import States
 
 from src.telegram.bot_core import BotDB
 
-from pytube import YouTube
+from src.youtube.download_video import DownloadVideo
 
 
 async def over_state(call: types.CallbackQuery, state: FSMContext):
@@ -54,29 +57,15 @@ async def download(call: types.CallbackQuery, state: FSMContext):
 
     await Sendler_msg().sendler_photo_call(call, LOGO, _msg, None)
 
-    _dir = os.path.join(dir_project, 'down')
+    result_dict = {'result': False, 'filter': _filter, 'link': link}
 
-    try:
-        fn = YouTube(link).streams.filter(res=f'{_filter}p').first().download(output_path=_dir)
-    except Exception as es:
-        await Sendler_msg.sendler_admin_call(call, f'Ошибка при скачивания видео "{link}" "{es}"', None)
+    trh = threading.Thread(target=DownloadVideo.start_down,
+                           args=(call, _filter, link, result_dict),
+                           name=(f'thr-{id_user}'))
 
-        return False
+    trh.start()
 
-    video = open(fn, 'rb')
-
-    try:
-        await call.bot.send_document(id_user, video)
-    except Exception as es:
-        print(f'Не могу выслать файл пользователю {id_pk} "{es}"')
-
-        video.close()
-
-        return False
-
-    video.close()
-
-    print()
+    wait_download = asyncio.create_task(DownloadVideo.wait_download(result_dict, call))
 
 
 def register_callbacks(dp: Dispatcher):

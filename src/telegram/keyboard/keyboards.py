@@ -28,16 +28,11 @@ class Admin_keyb(Call_admin):
 
         return self._start_key
 
-    def download_video(self, id_pk):
+    def download_video(self, id_pk, good_type):
         self._start_key = InlineKeyboardMarkup(row_width=4)
 
-        self._start_key.insert(InlineKeyboardButton(text=f'360', callback_data=f'download-360-{id_pk}'))
-
-        self._start_key.insert(InlineKeyboardButton(text=f'480', callback_data=f'download-480-{id_pk}'))
-
-        self._start_key.insert(InlineKeyboardButton(text=f'720', callback_data=f'download-720-{id_pk}'))
-
-        self._start_key.insert(InlineKeyboardButton(text=f'1080', callback_data=f'download-1080-{id_pk}'))
+        for _type in good_type:
+            self._start_key.insert(InlineKeyboardButton(text=_type, callback_data=f'download-{_type}-{id_pk}'))
 
         self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='over_state'))
 
