@@ -40,28 +40,78 @@ async def test(message: Message, state: FSMContext):
 async def search_type(video):
     good_type = []
 
-    for _type in video.fmt_streams:
+    try:
 
-        type = str(_type.resolution)[:-1]
+        for _type in video.fmt_streams:
 
-        if type in VIDEO_TYPE:
-            good_type.append(int(type))
+            type = str(_type.resolution)[:-1]
 
-    if good_type != []:
-        good_type = [x for x in set(good_type)]
+            if type in VIDEO_TYPE:
+                good_type.append(int(type))
 
-        good_type = sorted(good_type)
+        if good_type != []:
+            good_type = [x for x in set(good_type)]
+
+            good_type = sorted(good_type)
+    except:
+        return VIDEO_TYPE
 
     return good_type
 
 
-async def check_user_bot(message: Message):
+async def _send_audio(message: Message, text_user_name):
     try:
-        await message.bot.send_video(1422194909, message.video.file_id)
+        await message.bot.send_audio(int(text_user_name), message.audio.file_id)
     except Exception as es:
-        print(f'Ошибка пр редиректе файла "{es}"')
+        error = (f'Ошибка пр редиректе файла "{es}"')
 
-    print()
+        print(error)
+
+        await Sendler_msg.sendler_to_admin(message, error, None)
+
+        return False
+
+    return True
+
+
+async def _send_video(message: Message, text_user_name):
+    try:
+        await message.bot.send_video(int(text_user_name), message.video.file_id)
+    except Exception as es:
+        error = (f'Ошибка пр редиректе файла "{es}"')
+
+        print(error)
+
+        await Sendler_msg.sendler_to_admin(message, error, None)
+
+        return False
+
+    return True
+
+
+async def check_user_bot(message: Message):
+    text_user_name = message.text if message.text is not None else message.caption
+
+    type_message = message.content_type
+
+    if type_message == 'audio':
+        res_ = await _send_audio(message, text_user_name)
+    elif type_message == 'video':
+        res_ = await _send_video(message, text_user_name)
+    else:
+        res_ = False
+
+    if not res_:
+        return False
+
+    over_msg = f'Надеюсь, я смог вам помочь 🥺'
+
+    keyb = Admin_keyb().start_keyb(text_user_name)
+
+    await message.bot.send_message(int(text_user_name), over_msg, reply_markup=keyb)
+    # await message.bot.send_photo(int(text_user_name), file, caption=over_msg, reply_markup=keyb)
+
+    return True
 
 
 async def add_link(message: Message, state: FSMContext):
@@ -72,7 +122,7 @@ async def add_link(message: Message, state: FSMContext):
 
         await check_user_bot(message)
 
-        print()
+        return True
 
     link = message.text
 
@@ -85,7 +135,12 @@ async def add_link(message: Message, state: FSMContext):
     try:
         video = YouTube(link)
 
-        good_type = await search_type(video)
+        good_type = ['360', '480', '720', '1080']
+        # good_type = await search_type(video)
+
+        name_video = video.title
+
+        name_channel = video.author
 
         preview = video.thumbnail_url
     except:
@@ -108,7 +163,9 @@ async def add_link(message: Message, state: FSMContext):
 
         return False
 
-    _msg = f'Выберите качество, в котором хотите скачать видео:'
+    _msg = f'Выберите качество, в котором хотите скачать видео:\n\n' \
+           f'🎥 {name_video}\n\n' \
+           f'👨‍💻 {name_channel}'
 
     id_pk = BotDB.add_link(id_user, link)
 
@@ -192,4 +249,3 @@ def register_state(dp: Dispatcher):
     dp.register_message_handler(add_link_mp3, state=States.add_link_mp3)
 
     dp.register_message_handler(mailing_set, state=States.mailing_set, content_types=[types.ContentType.ANY])
-

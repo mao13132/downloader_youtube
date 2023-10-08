@@ -21,6 +21,8 @@ class Admin_keyb(Call_admin):
 
         self._start_key.add(InlineKeyboardButton(text=f'Скачать звук с видео с YouTube', callback_data='mp3'))
 
+        self._start_key.add(InlineKeyboardButton(text=f'Как пользоваться ботом?', callback_data='support'))
+
         if str(user_id) in ADMIN:
             self._start_key.add(InlineKeyboardButton(text=f'👨‍💻 Админ панель', callback_data='admin_panel'))
 
@@ -74,5 +76,18 @@ class Admin_keyb(Call_admin):
         self._start_key = InlineKeyboardMarkup(row_width=1)
 
         self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='admin_panel'))
+
+        return self._start_key
+
+    def system(self):
+        self._start_key = InlineKeyboardMarkup(row_width=1)
+
+        self._start_key.add(InlineKeyboardButton(text=f'Айфон', callback_data=f'instruction-iphone'))
+
+        self._start_key.add(InlineKeyboardButton(text=f'Андроид', callback_data=f'instruction-android'))
+
+        self._start_key.add(InlineKeyboardButton(text=f'Компьютер', callback_data=f'instruction-pc'))
+
+        self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='over_state'))
 
         return self._start_key

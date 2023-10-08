@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
@@ -6,7 +7,11 @@ from settings import *
 
 from src.sql.bot_connector import BotDB
 
-bot = Bot(token=TOKEN)
+from telegram_connector import user_bot_core
+
+bot = Bot(token=TOKEN, parse_mode="HTML")
+
+
 
 # logger = logging.getLogger()
 #

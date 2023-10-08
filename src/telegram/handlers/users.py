@@ -11,6 +11,7 @@ from src.telegram.state.states import add_link
 
 
 async def start(message: Message):
+
     id_user = message.chat.id
 
     login = message.chat.username

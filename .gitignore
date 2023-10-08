@@ -6,5 +6,4 @@ src/telegram/.env
 DB.db
 src/down/
 down/
-2test.py
-test.py
+src/telegram_user/sessions/
