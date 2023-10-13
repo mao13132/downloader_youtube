@@ -7,3 +7,4 @@ DB.db
 src/down/
 down/
 src/telegram_user/sessions/
+media/
