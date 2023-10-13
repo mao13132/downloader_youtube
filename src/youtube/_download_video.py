@@ -10,12 +10,12 @@ import asyncio
 import os
 import sys
 import time
-import yt_dlp
+
 from pytube import YouTube
 
 from aiogram.types import ChatActions
 
-from settings import dir_project
+from settings import dir_project, LOGO, VIDEO_TYPE_ANTI_BAG
 from src.telegram.sendler.sendler import Sendler_msg
 from src.youtube.delete_file import delete_file
 
@@ -23,8 +23,12 @@ from src.telegram.bot_core import user_bot_core
 import cv2
 
 
+# apt-get update && apt-get install libgl1
+
 class DownloadVideo:
     filesize = 0
+    """строке 223 файла innertube.py с ANDROID_MUSIC на ANDROID,
+    и YouTube(link, use_oauth=False, allow_oauth_cache=True) """
 
     def progress_function(self, chunk, file_handle, bytes_remaining):
         global filesize
@@ -124,39 +128,6 @@ class DownloadVideo:
 
         return True
 
-    async def new_video_download(self, result_dict):
-
-        link = result_dict['link']
-
-        id_user = result_dict['id_user']
-
-        _filter = result_dict['filter']
-
-        _dir = os.path.join(dir_project, 'down')
-
-        ydl_opts = {
-            'format': f'best[height<={_filter}]'
-        }
-
-        try:
-
-            video = yt_dlp.YoutubeDL(ydl_opts)
-            info_dict = video.extract_info(link, download=True)
-            downloaded_file_path = video.prepare_filename(info_dict)
-            video.close()
-
-        except Exception as es:
-            _error = (f'Ошибка при скачивание "{es}"')
-
-            print(_error)
-
-            result_dict['result'] = 'error'
-            result_dict['error'] = _error
-
-            return 'error'
-
-        return downloaded_file_path
-
     async def get_video_no_1080(self, result_dict):
 
         link = result_dict['link']
@@ -167,27 +138,14 @@ class DownloadVideo:
 
         _dir = os.path.join(dir_project, 'down')
 
-        try:
-            video_create = YouTube(link, use_oauth=True, allow_oauth_cache=True)
-        except Exception as es:
-            result_dict['result'] = 'error'
-            result_dict['error'] = f"Ошибка при инициализации видео: {str(es)}"
+        file_name_video = ''
 
-            return 'error'
-
-        list_stream = video_create.streams
-
-        status_error = False
-
-        for _try in range(len(list_stream)):
+        for _try in range(7):
 
             try:
-                if not status_error:
-                    video_stream = video_create.streams.filter(res=f'{_filter}p').first()
-                else:
-                    video_stream = list_stream[_try]
+                video_create = YouTube(link, use_oauth=True, allow_oauth_cache=True)
 
-                print(f'#{_try + 1} Начинаю обработку потока: {video_stream}')
+                video_stream = video_create.streams.filter(res=f'{_filter}p').first()
 
                 file_name_video = os.path.join(_dir, video_stream.default_filename)
 
@@ -195,39 +153,58 @@ class DownloadVideo:
 
                 fn = video_stream.download(output_path=_dir)
 
-                status_error = False
-
             except Exception as es:
 
-                print(f'Ошибка при скачивание видео "{es}" Попытка "{_try}"')
+                if 'NoneType' in str(es):
+                    index_filter = VIDEO_TYPE_ANTI_BAG.index(str(_filter))
 
-                status_error = True
+                    try:
+                        _filter = VIDEO_TYPE_ANTI_BAG[index_filter - 1]
+                    except:
+                        result_dict['result'] = 'error'
+                        result_dict['error'] = f"Нет такого типа: {str(es)}"
 
-                continue
+                        return 'error'
 
-            if status_error:
+                    continue
+
+                if _try < 7:
+                    print(f'Ошибка "{str(es)}" качество "{_filter}" делаю попытку {_try + 1}')
+
+                    # time.sleep(60)
+
+                    index_filter = VIDEO_TYPE_ANTI_BAG.index(str(_filter))
+
+                    try:
+                        _filter = VIDEO_TYPE_ANTI_BAG[index_filter - 1]
+                    except:
+                        pass
+
+                    try:
+                        delete_file(file_name_video)
+                    except:
+                        pass
+
+                    continue
 
                 result_dict['result'] = 'error'
                 result_dict['error'] = f"Попытка: '{_try}' video ошибка: '{str(es)}'"
 
                 return 'error'
 
-            else:
-
-                return fn
+            return fn
 
     @staticmethod
     async def download_video(result_dict):
 
         filter = result_dict['filter']
 
-        # if filter == '1080':
-        #     result_dict['filter'] = 720
+        if filter == '1080':
+            result_dict['filter'] = 720
 
         # good_file = await DownloadVideo.get_video_and_audio_1080(result_dict)
 
-        # good_file = await DownloadVideo().get_video_no_1080(result_dict)
-        good_file = await DownloadVideo().new_video_download(result_dict)
+        good_file = await DownloadVideo().get_video_no_1080(result_dict)
 
         print(f'Скачал видео {good_file}')
 

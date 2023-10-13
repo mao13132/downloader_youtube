@@ -114,19 +114,20 @@ async def admin_panel(call: types.CallbackQuery, state: FSMContext):
     await Sendler_msg().sendler_photo_call(call, LOGO, text_admin, keyb)
 
 
-async def over_state(call: types.CallbackQuery, state: FSMContext):
-    await call.bot.answer_callback_query(call.id)
-
-    await state.finish()
-
-    await Sendler_msg.log_client_call(call)
-
-    await call.message.bot.delete_message(call.message.chat.id, call.message.message_id)
-
-    await start(call.message)
+# async def over_state(call: types.CallbackQuery, state: FSMContext):
+#     await call.bot.answer_callback_query(call.id)
+#
+#     await state.finish()
+#
+#     await Sendler_msg.log_client_call(call)
+#
+#     await call.message.bot.delete_message(call.message.chat.id, call.message.message_id)
+#
+#     await start(call.message)
 
 
 async def users(call: types.CallbackQuery):
+
     await call.bot.answer_callback_query(call.id)
 
     await Sendler_msg.log_client_call(call)
@@ -224,7 +225,7 @@ def register_callbacks(dp: Dispatcher):
 
     dp.register_callback_query_handler(admin_panel, text_contains='admin_panel', state='*')
 
-    dp.register_callback_query_handler(over_state, text_contains='over_state', state='*')
+    # dp.register_callback_query_handler(over_state, text_contains='over_state', state='*')
 
     dp.register_callback_query_handler(users, text_contains='users')
 

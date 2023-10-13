@@ -212,7 +212,10 @@ async def add_link_mp3(message: Message, state: FSMContext):
 
         return False
 
-    result_dict = {'result': False, 'filter': '360', 'link': link, 'one_msg_id': one_msg.message_id}
+    name_file = video.title
+
+    result_dict = {'result': False, 'filter': '360', 'link': link, 'one_msg_id': one_msg.message_id, 'id_user': id_user,
+                   'name_file': name_file}
 
     trh = threading.Thread(target=DownloadMp3.start_down,
                            args=(result_dict, '', ''),

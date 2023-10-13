@@ -53,14 +53,17 @@ async def good_mal(call: types.CallbackQuery):
     for _user in users_list:
         id_client = _user[1]
 
-        res_send = await _mailing(call.message, id_client, row_sql_response)
+        try:
+            res_send = await _mailing(call.message, id_client, row_sql_response)
+        except:
+            continue
 
         if res_send:
             good_count_send += 1
 
     keyb = Admin_keyb().admin_panel()
 
-    await Sendler_msg().sendler_photo_call(call, LOGO, f'🍀 Рассылка {good_count_send} '
-                                                             f'пользователям выполнена', keyb)
+    await Sendler_msg().new_sendler_photo_call(call, LOGO, f'🍀 Рассылка {good_count_send} '
+                                                           f'пользователям выполнена', keyb)
 
     return True
