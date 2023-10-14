@@ -52,6 +52,8 @@ class Admin_keyb(Call_admin):
 
         self._start_key.add(InlineKeyboardButton(text=f'📩 Рассылка', callback_data='mailing_set'))
 
+        self._start_key.add(InlineKeyboardButton(text=f'🗑 Очистить хранилище', callback_data='clear'))
+
         self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='over_state'))
 
         return self._start_key

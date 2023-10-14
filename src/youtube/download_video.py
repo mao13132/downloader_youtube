@@ -207,7 +207,7 @@ class DownloadVideo:
                 return downloaded_file_path
 
             except Exception as es:
-                _error = (f'Ошибка при скачивание "{es}"')
+                _error = (f'Ошибка при скачивание video "{es}"')
 
                 print(_error)
 

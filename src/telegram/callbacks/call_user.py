@@ -6,6 +6,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import ChatActions
 from pytube import YouTube
 
+from _clear import _clear
 from src.telegram.logic.devision_msg import division_message
 from src.telegram.handlers.users import start
 from src.telegram.logic.good_mal import good_mal
@@ -138,16 +139,23 @@ async def admin_panel(call: types.CallbackQuery, state: FSMContext):
     await Sendler_msg().sendler_photo_call(call, LOGO, text_admin, keyb)
 
 
-# async def over_state(call: types.CallbackQuery, state: FSMContext):
-#     await call.bot.answer_callback_query(call.id)
-#
-#     await state.finish()
-#
-#     await Sendler_msg.log_client_call(call)
-#
-#     await call.message.bot.delete_message(call.message.chat.id, call.message.message_id)
-#
-#     await start(call.message)
+async def clear(call: types.CallbackQuery):
+    await call.bot.answer_callback_query(call.id)
+
+    id_user = call.message.chat.id
+
+    await Sendler_msg.log_client_call(call)
+
+    res_clear = await _clear()
+
+    if res_clear:
+        _msg = f'✅ Хранилище успешно очищено'
+    else:
+        _msg = f'⛔️ Не могу очистить хранилище'
+
+    keyb = Admin_keyb().admin_panel()
+
+    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, keyb)
 
 
 async def users(call: types.CallbackQuery):
@@ -215,12 +223,7 @@ async def instruction(call: types.CallbackQuery, state: FSMContext):
     elif user_system == 'pc':
         file_video = r'src/telegram/media/pc.MOV'
 
-    # media = types.MediaGroup()
-    # media.attach_video(types.InputFile(file_video), 'rb')
-
     await call.bot.send_chat_action(id_user, ChatActions.UPLOAD_VIDEO)
-
-    # await call.bot.send_media_group(id_user, media=media)
 
     with open(file_video, 'rb') as file:
 
@@ -248,8 +251,6 @@ def register_callbacks(dp: Dispatcher):
 
     dp.register_callback_query_handler(admin_panel, text_contains='admin_panel', state='*')
 
-    # dp.register_callback_query_handler(over_state, text_contains='over_state', state='*')
-
     dp.register_callback_query_handler(users, text_contains='users')
 
     dp.register_callback_query_handler(mailing_set, text='mailing_set')
@@ -259,3 +260,5 @@ def register_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(support, text='support')
 
     dp.register_callback_query_handler(instruction, text_contains='instruction-')
+
+    dp.register_callback_query_handler(clear, text='clear')
