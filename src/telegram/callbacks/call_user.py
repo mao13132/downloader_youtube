@@ -7,6 +7,7 @@ from aiogram.types import ChatActions
 from pytube import YouTube
 
 from _clear import _clear
+from src.telegram.logic.checking_for_a_subscription import checking_for_a_subscription, check_group
 from src.telegram.logic.devision_msg import division_message
 from src.telegram.handlers.users import start
 from src.telegram.logic.good_mal import good_mal
@@ -21,6 +22,12 @@ from src.youtube.download_video import DownloadVideo
 
 
 async def over_state(call: types.CallbackQuery, state: FSMContext):
+
+    subs = await checking_for_a_subscription(call.message)
+
+    if not subs:
+        return False
+
     await state.finish()
 
     id_user = call.message.chat.id
@@ -35,6 +42,12 @@ async def over_state(call: types.CallbackQuery, state: FSMContext):
 
 
 async def youtube(call: types.CallbackQuery, state: FSMContext):
+
+    subs = await checking_for_a_subscription(call.message)
+
+    if not subs:
+        return False
+
     _msg = f'Вставьте ссылку на видео с YouTube, чтобы получить видеофайл 🎥'
 
     keyb = Admin_keyb().youtube()
@@ -45,6 +58,12 @@ async def youtube(call: types.CallbackQuery, state: FSMContext):
 
 
 async def support(call: types.CallbackQuery, state: FSMContext):
+
+    subs = await checking_for_a_subscription(call.message)
+
+    if not subs:
+        return False
+
     await call.bot.answer_callback_query(call.id)
 
     _msg = f'Какой телефон вы используете?'
@@ -55,6 +74,12 @@ async def support(call: types.CallbackQuery, state: FSMContext):
 
 
 async def mp3(call: types.CallbackQuery, state: FSMContext):
+
+    subs = await checking_for_a_subscription(call.message)
+
+    if not subs:
+        return False
+
     await call.bot.answer_callback_query(call.id)
 
     _msg = f'Вставьте ссылку на видео с YouTube для получения звука с видео'
@@ -67,6 +92,12 @@ async def mp3(call: types.CallbackQuery, state: FSMContext):
 
 
 async def download(call: types.CallbackQuery, state: FSMContext):
+
+    subs = await checking_for_a_subscription(call.message)
+
+    if not subs:
+        return False
+
     await state.finish()
 
     await call.bot.answer_callback_query(call.id)
@@ -106,7 +137,7 @@ async def download(call: types.CallbackQuery, state: FSMContext):
     change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
 
     result_dict = {'result': False, 'filter': _filter, 'link': link, 'id_user': id_user, 'call': call,
-                   'name_file': name_file}
+                   'name_file': name_file, 'over': False}
 
     _msg = f'<b>Lizard качает ваше видео 🎬</b>\nЭто может занять от 10 секунд до 5 минут 🛜'
 
@@ -121,6 +152,8 @@ async def download(call: types.CallbackQuery, state: FSMContext):
     trh.start()
 
     wait_download = asyncio.create_task(DownloadVideo.wait_download(result_dict, call, BotDB))
+
+    wait_download = asyncio.create_task(DownloadVideo.wait_over(result_dict, call))
 
 
 async def admin_panel(call: types.CallbackQuery, state: FSMContext):
@@ -178,7 +211,8 @@ async def users(call: types.CallbackQuery):
 
         return False
 
-    _msg += '\n\n'.join(f"{count + 1}. Логин: {f'@{x[2]}' if x[2] is not None else 'Не указан'} ID: {x[1]}"
+    _msg += '\n\n'.join(f"{count + 1}. Логин: {f'@{x[2]}' if x[2] is not None else 'Не указан'} ID: {x[1]} "
+                        f"Скачал: {x[7]}"
                         for count, x in enumerate(list_all_users))
 
     msg_ = _msg.replace('\n', '')
@@ -400,3 +434,5 @@ def register_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(set_link_channel, text='set_link_channel')
 
     dp.register_callback_query_handler(set_count_down, text='set_count_down')
+
+    dp.register_callback_query_handler(check_group, text='check_group')

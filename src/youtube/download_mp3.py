@@ -23,6 +23,20 @@ from src.telegram.bot_core import user_bot_core
 
 
 class DownloadMp3:
+
+    @staticmethod
+    async def wait_over(result_dict, message):
+
+        id_user = message.chat.id
+
+        while not result_dict['over']:
+            try:
+                await message.bot.send_chat_action(id_user, ChatActions.UPLOAD_AUDIO)
+            except:
+                pass
+
+            await asyncio.sleep(3)
+
     @staticmethod
     async def wait_download(result_dict, message, BotDB):
 
@@ -34,6 +48,8 @@ class DownloadMp3:
         change_down_status = BotDB.update_user_key(id_user, 'down_status', 0)
 
         if result_dict['result'] == 'error':
+
+            result_dict['over'] = True
 
             try:
                 await message.bot.delete_message(id_user, result_dict['one_msg_id'])
@@ -75,7 +91,12 @@ class DownloadMp3:
 
             BotDB.plus_count_down(id_user)
 
+            result_dict['over'] = True
+
         except Exception as es:
+
+            result_dict['over'] = True
+
             try:
                 delete_file(result_dict['result'])
 

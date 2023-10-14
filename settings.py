@@ -6,7 +6,7 @@ dotenv_path = os.path.join(os.path.dirname(__file__), 'src', 'telegram', '.env')
 
 load_dotenv(dotenv_path)
 
-ADMIN = ['1422194909', '802664278']
+ADMIN = ['1422194909']
 
 TOKEN = os.getenv('TOKEN')
 

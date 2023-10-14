@@ -12,6 +12,7 @@ from pytube import YouTube
 from settings import LOGO, VIDEO_TYPE, USER_BOT_NAME
 from src.telegram.keyboard.keyboards import Admin_keyb
 from src.telegram.logic.add_response_word import add_response_word
+from src.telegram.logic.checking_for_a_subscription import checking_for_a_subscription
 from src.telegram.logic.send_client_type_message import send_client_type_message
 from src.telegram.sendler.sendler import Sendler_msg
 
@@ -122,6 +123,11 @@ async def check_user_bot(message: Message):
 
 
 async def add_link(message: Message, state: FSMContext):
+    type_chat = message.chat.type
+
+    if type_chat != 'private':
+        return True
+
     user_name = message.chat.username
 
     if user_name == USER_BOT_NAME[1:]:
@@ -130,6 +136,11 @@ async def add_link(message: Message, state: FSMContext):
         await check_user_bot(message)
 
         return True
+
+    subs = await checking_for_a_subscription(message)
+
+    if not subs:
+        return False
 
     link = message.text
 
@@ -238,7 +249,7 @@ async def add_link_mp3(message: Message, state: FSMContext):
     change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
 
     result_dict = {'result': False, 'filter': '360', 'link': link, 'one_msg_id': one_msg.message_id, 'id_user': id_user,
-                   'name_file': name_file, 'message': message}
+                   'name_file': name_file, 'message': message, 'over': False}
 
     trh = threading.Thread(target=DownloadMp3.start_down,
                            args=(result_dict, '', ''),
@@ -247,6 +258,8 @@ async def add_link_mp3(message: Message, state: FSMContext):
     trh.start()
 
     wait_download = asyncio.create_task(DownloadMp3.wait_download(result_dict, message, BotDB))
+
+    wait_download = asyncio.create_task(DownloadMp3.wait_over(result_dict, message))
 
     await state.finish()
 

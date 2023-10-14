@@ -40,6 +40,19 @@ class DownloadVideo:
         print(f"{current * 100 / total:.1f}%")
 
     @staticmethod
+    async def wait_over(result_dict, call):
+
+        id_user = call.message.chat.id
+
+        while not result_dict['over']:
+            try:
+                await call.bot.send_chat_action(id_user, ChatActions.UPLOAD_VIDEO)
+            except:
+                pass
+
+            await asyncio.sleep(3)
+
+    @staticmethod
     async def wait_download(result_dict, call, BotDB):
 
         id_user = call.message.chat.id
@@ -50,6 +63,8 @@ class DownloadVideo:
         change_down_status = BotDB.update_user_key(id_user, 'down_status', 0)
 
         if result_dict['result'] == 'error':
+
+            result_dict['over'] = True
 
             try:
                 await call.message.bot.delete_message(id_user, result_dict['one_msg_id'])
@@ -89,8 +104,6 @@ class DownloadVideo:
         try:
             me = await call.bot.me
 
-            await call.bot.send_chat_action(id_user, ChatActions.UPLOAD_VIDEO)
-
             await user_bot_core.app.send_video(f'@{me.username}', video, caption=id_user,
                                                progress=DownloadVideo.progress, width=width, height=height)
 
@@ -101,9 +114,13 @@ class DownloadVideo:
 
             BotDB.plus_count_down(id_user)
 
+            result_dict['over'] = True
+
         except Exception as es:
 
             delete_file(result_dict['result'])
+
+            result_dict['over'] = True
 
             if 'File too large for uploading. Check telegram api limit' in str(es):
                 error = f'У пользователя ID: {id_user} ошибка. Размер видео превышает лимиты telegram по отправке ' \
