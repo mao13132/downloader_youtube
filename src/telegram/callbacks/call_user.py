@@ -357,7 +357,7 @@ async def subs(call: types.CallbackQuery, state: FSMContext):
 
     BotDB.update_settings('subs', status)
 
-    await menu_sub(call)
+    await menu_sub(call, state)
 
 
 async def set_id_channel(call: types.CallbackQuery, state: FSMContext):

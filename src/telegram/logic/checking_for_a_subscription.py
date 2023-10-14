@@ -75,7 +75,7 @@ async def checking_for_a_subscription(message: Message):
     try:
         response = await message.bot.get_chat_member(sub_id_channel, user_id)
     except Exception as es:
-        if 'Chat not found' in str(es):
+        if 'Chat not found' in str(es) or 'User not found' in str(es):
             name_bot = await message.bot.get_me()
 
             name_user = f'@{message.chat.username}' if message.chat.username is not None else message.chat.first_name

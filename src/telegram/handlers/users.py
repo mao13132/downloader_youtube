@@ -32,8 +32,11 @@ async def start(message: Message):
     await Sendler_msg().new_sendler_photo_message(message, LOGO, _msg, keyb)
 
 
-async def _new_chat_members(message: Message):
+async def test(message: Message):
+    login_user = f"@{message.from_user.username}" if message.from_user.username is not None else message.from_user.id
 
+
+async def _new_chat_members(message: Message):
     login_user = f"@{message.from_user.username}" if message.from_user.username is not None else message.from_user.id
 
     chat_name = message.chat.full_name if message.chat.full_name is not None else message.chat.id
@@ -51,3 +54,6 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(_new_chat_members, content_types=['new_chat_members'])
 
     dp.register_message_handler(add_link, text_contains='', content_types=[types.ContentType.ANY])
+
+
+    dp.register_message_handler(test, text_contains='')
