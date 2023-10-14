@@ -35,6 +35,13 @@ class Admin_keyb(Call_admin):
 
         return self._start_key
 
+    def back_subs(self):
+        self._start_key = InlineKeyboardMarkup(row_width=1)
+
+        self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='menu_sub'))
+
+        return self._start_key
+
     def download_video(self, id_pk, good_type):
         self._start_key = InlineKeyboardMarkup(row_width=4)
 
@@ -54,7 +61,29 @@ class Admin_keyb(Call_admin):
 
         self._start_key.add(InlineKeyboardButton(text=f'🗑 Очистить хранилище', callback_data='clear'))
 
+        self._start_key.add(InlineKeyboardButton(text=f'📝 Настройка подписки', callback_data='menu_sub'))
+
         self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='over_state'))
+
+        return self._start_key
+
+    def subs_menu(self, button_dict):
+
+        self._start_key = InlineKeyboardMarkup(row_width=1)
+
+        self._start_key.add(InlineKeyboardButton(text=button_dict['status_button'],
+                                                 callback_data=button_dict['status_button_call']))
+
+        self._start_key.add(InlineKeyboardButton(text=button_dict['id_channel_button'],
+                                                 callback_data=button_dict['id_channel_button_call']))
+
+        self._start_key.add(InlineKeyboardButton(text=button_dict['link_channel_button'],
+                                                 callback_data=button_dict['link_channel_button_call']))
+
+        self._start_key.add(InlineKeyboardButton(text=button_dict['count_down'],
+                                                 callback_data=button_dict['count_down_call']))
+
+        self._start_key.add(InlineKeyboardButton(text=f'🔙 Назад', callback_data='admin_panel'))
 
         return self._start_key
 

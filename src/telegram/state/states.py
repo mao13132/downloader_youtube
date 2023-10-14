@@ -28,6 +28,12 @@ class States(StatesGroup):
 
     mailing_set = State()
 
+    set_id = State()
+
+    set_link = State()
+
+    set_count_down = State()
+
 
 async def test(message: Message, state: FSMContext):
     try:
@@ -183,7 +189,6 @@ async def add_link(message: Message, state: FSMContext):
 
 
 async def add_link_mp3(message: Message, state: FSMContext):
-
     id_user = message.chat.id
 
     login = message.chat.username if message.chat.username is not None else message.chat.first_name
@@ -262,11 +267,86 @@ async def mailing_set(message: Message, state: FSMContext):
     await state.finish()
 
 
+async def set_id(message: Message, state: FSMContext):
+    id_user = message.from_user.id
+
+    id_channel = message.text
+
+    keyb = Admin_keyb().back_subs()
+
+    if not id_channel[1:].isdigit():
+        error = f'⚠️ Вы указали не верно ID канала. Попробуйте ещё раз'
+
+        await Sendler_msg.send_msg_message(message, error, keyb)
+
+        return False
+
+    BotDB.update_settings('id_channel', id_channel)
+
+    error = f'✅ ID: "{id_channel}" успешно установлен'
+
+    await Sendler_msg.send_msg_message(message, error, keyb)
+
+    await state.finish()
+
+
+async def set_link(message: Message, state: FSMContext):
+    id_user = message.from_user.id
+
+    link_channel = message.text
+
+    keyb = Admin_keyb().back_subs()
+
+    if 'http' not in link_channel:
+        error = f'⚠️ Вы указали не верно пригласительную ссылку. Попробуйте ещё раз'
+
+        await Sendler_msg.send_msg_message(message, error, keyb)
+
+        return False
+
+    BotDB.update_settings('link_channel', link_channel)
+
+    error = f'✅ Ссылка: "{link_channel}" успешно установлена'
+
+    await Sendler_msg.send_msg_message(message, error, keyb)
+
+    await state.finish()
+
+
+async def set_count_down(message: Message, state: FSMContext):
+    id_user = message.from_user.id
+
+    count_down = message.text
+
+    keyb = Admin_keyb().back_subs()
+
+    if not count_down.isdigit():
+        error = f'⚠️ Вы указали не верно кол-во скаченных файлов, попробуйте ещё раз'
+
+        await Sendler_msg.send_msg_message(message, error, keyb)
+
+        return False
+
+    BotDB.update_settings('count_down', count_down)
+
+    error = f'✅ Кол-во: "{count_down}" успешно установлено'
+
+    await Sendler_msg.send_msg_message(message, error, keyb)
+
+    await state.finish()
+
+
 def register_state(dp: Dispatcher):
     dp.register_message_handler(test, state=States.test)
 
     dp.register_message_handler(add_link, state=States.add_link)
 
     dp.register_message_handler(add_link_mp3, state=States.add_link_mp3)
+
+    dp.register_message_handler(set_id, state=States.set_id)
+
+    dp.register_message_handler(set_link, state=States.set_link)
+
+    dp.register_message_handler(set_count_down, state=States.set_count_down)
 
     dp.register_message_handler(mailing_set, state=States.mailing_set, content_types=[types.ContentType.ANY])

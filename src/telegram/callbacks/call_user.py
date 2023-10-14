@@ -142,6 +142,8 @@ async def admin_panel(call: types.CallbackQuery, state: FSMContext):
 async def clear(call: types.CallbackQuery):
     await call.bot.answer_callback_query(call.id)
 
+    BotDB.refresh_status_all()
+
     id_user = call.message.chat.id
 
     await Sendler_msg.log_client_call(call)
@@ -240,6 +242,132 @@ async def instruction(call: types.CallbackQuery, state: FSMContext):
     await start(call.message)
 
 
+async def menu_sub(call: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+
+    await call.bot.answer_callback_query(call.id)
+
+    id_user = call.message.chat.id
+
+    sub_status = BotDB.get_subs_status()
+
+    sub_id_channel = BotDB.get_id_subs_channel()
+
+    sub_link_channel = BotDB.get_link_subs_channel()
+
+    sub_count_down = BotDB.get_count_subs_file_down()
+
+    await Sendler_msg.log_client_call(call)
+
+    button_dict = {}
+
+    if sub_status == '1':
+        status = f'<b>✅ Включена</b>'
+        button_dict['status_button'] = f'🅾️ Выключить'
+        button_dict['status_button_call'] = 'subs-off'
+    else:
+        status = f'<b>🅾️ Выключена</b>'
+        button_dict['status_button'] = f'✅ Включить'
+        button_dict['status_button_call'] = 'subs-on'
+
+    if sub_id_channel == '0':
+        id_channel = '<b>Не указан</b>'
+        button_dict['id_channel_button'] = f'🖋 Указать ID'
+        button_dict['id_channel_button_call'] = 'set_id_channel'
+    else:
+        id_channel = sub_id_channel
+        button_dict['id_channel_button'] = f'✏️ Изменить ID'
+        button_dict['id_channel_button_call'] = 'set_id_channel'
+
+    if sub_link_channel == '0':
+        link_channel = '<b>Не указана</b>'
+        button_dict['link_channel_button'] = f'🖋 Указать ссылку'
+        button_dict['link_channel_button_call'] = 'set_link_channel'
+    else:
+        link_channel = sub_link_channel
+        button_dict['link_channel_button'] = f'✏️ Изменить ссылку'
+        button_dict['link_channel_button_call'] = 'set_link_channel'
+
+    button_dict['count_down'] = f'✏️ Изменить кол-во'
+    button_dict['count_down_call'] = 'set_count_down'
+
+    _msg = f'Состояние: {status}\n\n' \
+           f'ID источника: {id_channel}\n\n' \
+           f'Пригласительная ссылка: {link_channel}\n\n' \
+           f'Через сколько скачек подписывать: <b>{sub_count_down}</b>'
+
+    keyb = Admin_keyb().subs_menu(button_dict)
+
+    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, keyb)
+
+
+async def subs(call: types.CallbackQuery, state: FSMContext):
+    await Sendler_msg.log_client_call(call)
+
+    try:
+        _, trigger = str(call.data).split('-')
+    except:
+
+        error = (f'⚠️ Ошибка при разборе subs')
+
+        print(error)
+
+        await Sendler_msg.send_msg_call(call, error, None)
+
+        return False
+
+    if trigger == 'on':
+        status = 1
+    else:
+        status = 0
+
+    BotDB.update_settings('subs', status)
+
+    await menu_sub(call)
+
+
+async def set_id_channel(call: types.CallbackQuery, state: FSMContext):
+    await Sendler_msg.log_client_call(call)
+
+    id_user = call.message.chat.id
+
+    _msg = f'Отправьте мне следующим сообщение ID канала на который необходимо проверять подписку'
+
+    keyb = Admin_keyb().back_subs()
+
+    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, keyb)
+
+    await States.set_id.set()
+
+
+async def set_link_channel(call: types.CallbackQuery, state: FSMContext):
+    await Sendler_msg.log_client_call(call)
+
+    id_user = call.message.chat.id
+
+    _msg = f'Отправьте мне следующим сообщение пригласительную ссылку на канал на который необходимо подписываться'
+
+    keyb = Admin_keyb().back_subs()
+
+    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, keyb)
+
+    await States.set_link.set()
+
+
+async def set_count_down(call: types.CallbackQuery, state: FSMContext):
+    await Sendler_msg.log_client_call(call)
+
+    id_user = call.message.chat.id
+
+    _msg = f'Отправьте мне следующим сообщение кол-во скаченных файлов у пользователя после которого проверяю подписку'
+
+    keyb = Admin_keyb().back_subs()
+
+    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, keyb)
+
+    await States.set_count_down.set()
+
+
 def register_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(youtube, text='youtube')
 
@@ -262,3 +390,13 @@ def register_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(instruction, text_contains='instruction-')
 
     dp.register_callback_query_handler(clear, text='clear')
+
+    dp.register_callback_query_handler(menu_sub, text='menu_sub', state='*')
+
+    dp.register_callback_query_handler(subs, text_contains='subs-')
+
+    dp.register_callback_query_handler(set_id_channel, text='set_id_channel')
+
+    dp.register_callback_query_handler(set_link_channel, text='set_link_channel')
+
+    dp.register_callback_query_handler(set_count_down, text='set_count_down')

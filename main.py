@@ -19,6 +19,16 @@ def registration_calls(dp):
     register_callbacks(dp)
 
 
+def create_settings(BotDB):
+    sub_status = BotDB.get_subs_status()
+
+    sub_id_channel = BotDB.get_id_subs_channel()
+
+    sub_link_channel = BotDB.get_link_subs_channel()
+
+    sub_count_down = BotDB.get_count_subs_file_down()
+
+
 async def main():
 
     await _clear()
@@ -31,6 +41,10 @@ async def main():
     print(f'Успешно авторизовался в user bote')
 
     bot_start = Core()
+
+    create_settings(bot_start.BotDB)
+
+    bot_start.BotDB.refresh_status_all()
 
     registration_state(bot_start.dp)
     registration_all_handlers(bot_start.dp)

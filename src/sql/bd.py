@@ -65,6 +65,14 @@ class BotDB:
         except Exception as es:
             print(f'SQL исключение links {es}')
 
+        try:
+            self.cursor.execute(f"CREATE TABLE IF NOT EXISTS "
+                                f"settings (id_pk INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                f"key TEXT, value TEXT)")
+
+        except Exception as es:
+            print(f'SQL исключение check_table settings {es}')
+
     def check_or_add_user(self, id_user, login):
 
         result = self.cursor.execute(f"SELECT * FROM users WHERE id_user='{id_user}'")
@@ -159,6 +167,14 @@ class BotDB:
 
         return response
 
+    def refresh_status_all(self):
+
+        result = self.cursor.execute(f"UPDATE users SET down_status = '0'")
+
+        self.conn.commit()
+
+        return True
+
     def get_response_word_from_id_pk(self, id_pk):
         try:
 
@@ -201,6 +217,107 @@ class BotDB:
             return True
 
         return False
+
+    def get_subs_status(self):
+
+        result = self.cursor.execute(f"SELECT * FROM settings WHERE key='subs'")
+
+        response = result.fetchall()
+
+        if response == []:
+
+            self.cursor.execute("INSERT OR IGNORE INTO settings ('key', 'value') VALUES (?,?)",
+                                ('subs', '0'))
+
+            self.conn.commit()
+
+            return '0'
+        else:
+
+            result = self.cursor.execute(f"SELECT value FROM settings "
+                                         f"WHERE key='subs'")
+
+            response = result.fetchall()[0][0]
+
+            return response
+
+    def get_id_subs_channel(self):
+
+        result = self.cursor.execute(f"SELECT * FROM settings WHERE key='id_channel'")
+
+        response = result.fetchall()
+
+        if response == []:
+
+            self.cursor.execute("INSERT OR IGNORE INTO settings ('key', 'value') VALUES (?,?)",
+                                ('id_channel', '0'))
+
+            self.conn.commit()
+
+            return '0'
+        else:
+
+            result = self.cursor.execute(f"SELECT value FROM settings "
+                                         f"WHERE key='id_channel'")
+
+            response = result.fetchall()[0][0]
+
+            return response
+
+    def get_link_subs_channel(self):
+
+        result = self.cursor.execute(f"SELECT * FROM settings WHERE key='link_channel'")
+
+        response = result.fetchall()
+
+        if response == []:
+
+            self.cursor.execute("INSERT OR IGNORE INTO settings ('key', 'value') VALUES (?,?)",
+                                ('link_channel', '0'))
+
+            self.conn.commit()
+
+            return '0'
+        else:
+
+            result = self.cursor.execute(f"SELECT value FROM settings "
+                                         f"WHERE key='link_channel'")
+
+            response = result.fetchall()[0][0]
+
+            return response
+
+    def get_count_subs_file_down(self):
+
+        result = self.cursor.execute(f"SELECT * FROM settings WHERE key='count_down'")
+
+        response = result.fetchall()
+
+        if response == []:
+
+            self.cursor.execute("INSERT OR IGNORE INTO settings ('key', 'value') VALUES (?,?)",
+                                ('count_down', '1'))
+
+            self.conn.commit()
+
+            return '1'
+        else:
+
+            result = self.cursor.execute(f"SELECT value FROM settings "
+                                         f"WHERE key='count_down'")
+
+            response = result.fetchall()[0][0]
+
+            return response
+
+    def update_settings(self, key, value):
+        try:
+            self.cursor.execute(f"UPDATE settings SET value = '{value}' WHERE key = '{key}'")
+            self.conn.commit()
+            return True
+        except Exception as es:
+            print(f'SQL Ошибка при обновления языка update_settings "{es}"')
+            return False
 
     def close(self):
         self.conn.close()
