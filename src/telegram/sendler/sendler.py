@@ -148,18 +148,18 @@ class Sendler_msg:
             with open(photo, 'rb') as file:
                 file_photo = types.InputMediaPhoto(file)
 
-                await call.message.edit_media(media=file_photo)
-                await call.message.edit_caption(caption=text, reply_markup=keyb)
+                res_ = await call.message.edit_media(media=file_photo)
+                res_ = await call.message.edit_caption(caption=text, reply_markup=keyb)
         except:
             try:
                 with open(photo, 'rb') as file:
-                    await call.message.bot.send_photo(call.message.chat.id, file, caption=(text),
+                    res_ = await call.message.bot.send_photo(call.message.chat.id, file, caption=(text),
                                                       reply_markup=keyb)
             except Exception as es:
                 print(f'Ошибка при отправке сообщения call с фото {es}')
                 return False
 
-        return True
+        return res_
 
     async def new_sendler_photo_call(self, call, photo, text, keyb):
 

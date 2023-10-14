@@ -182,11 +182,26 @@ async def add_link(message: Message, state: FSMContext):
 
 
 async def add_link_mp3(message: Message, state: FSMContext):
+
+    id_user = message.chat.id
+
+    login = message.chat.username if message.chat.username is not None else message.chat.first_name
+
+    user_data = BotDB.get_user_data_from_id(id_user)
+
+    down_status = user_data[8]
+
+    if down_status != 0:
+        error = (f'⚠️ {login}, пожалуйста, <b>дождитесь</b>, пока скачается предыдущий файл')
+        print(error)
+
+        await Sendler_msg().new_sendler_message(message, error, Admin_keyb().start_keyb(id_user))
+
+        return False
+
     link = message.text
 
     valid_video = True
-
-    id_user = message.chat.id
 
     one_msg = await message.bot.send_message(id_user, 'Начинаю получать звуковой файл...')
 
@@ -214,8 +229,10 @@ async def add_link_mp3(message: Message, state: FSMContext):
 
     name_file = video.title
 
+    change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
+
     result_dict = {'result': False, 'filter': '360', 'link': link, 'one_msg_id': one_msg.message_id, 'id_user': id_user,
-                   'name_file': name_file}
+                   'name_file': name_file, 'message': message}
 
     trh = threading.Thread(target=DownloadMp3.start_down,
                            args=(result_dict, '', ''),
@@ -223,7 +240,7 @@ async def add_link_mp3(message: Message, state: FSMContext):
 
     trh.start()
 
-    wait_download = asyncio.create_task(DownloadMp3.wait_download(result_dict, message))
+    wait_download = asyncio.create_task(DownloadMp3.wait_download(result_dict, message, BotDB))
 
     await state.finish()
 

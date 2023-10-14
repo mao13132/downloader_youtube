@@ -1,5 +1,7 @@
 import datetime
+
 import sqlite3
+
 from datetime import datetime
 
 
@@ -32,7 +34,9 @@ class BotDB:
                                 f"status TEXT DEFAULT new, "
                                 f"join_date DATETIME, "
                                 f"last_time DATETIME DEFAULT 0, "
-                                f"other TEXT)")
+                                f"other TEXT,"
+                                f"count_down INT DEFAULT 0,"
+                                f"down_status BOOLEAN DEFAULT 0)")
 
         except Exception as es:
             print(f'SQL исключение check_table users {es}')
@@ -80,6 +84,32 @@ class BotDB:
             return True
 
         return False
+
+    def get_user_data_from_id(self, id_user):
+        try:
+
+            result = self.cursor.execute(f"SELECT * FROM users "
+                                         f"WHERE id_user = '{id_user}'")
+
+            response = result.fetchall()
+
+            response = response[0]
+
+
+        except Exception as es:
+            print(f'Ошибка SQL get_user_data_from_id: {es}')
+            return False
+
+        return response
+
+    def update_user_key(self, id_user, key, value):
+        try:
+            self.cursor.execute(f"UPDATE users SET {key} = '{value}' WHERE id_user = '{id_user}'")
+            self.conn.commit()
+            return True
+        except Exception as es:
+            print(f'SQL Ошибка при обновления языка update_user_key "{es}"')
+            return False
 
     def add_link(self, id_user, link):
 
@@ -145,6 +175,32 @@ class BotDB:
             return False
 
         return response
+
+    def plus_count_down(self, id_user):
+
+        result = self.cursor.execute(f"SELECT count_down FROM users WHERE id_user='{id_user}'")
+
+        response = result.fetchall()
+
+        if response != []:
+
+            try:
+                response = response[0][0]
+            except:
+                return False
+
+            try:
+                response = int(response) + 1
+            except:
+                return False
+
+            result = self.cursor.execute(f"UPDATE users SET count_down = '{response}' WHERE id_user='{id_user}'")
+
+            self.conn.commit()
+
+            return True
+
+        return False
 
     def close(self):
         self.conn.close()

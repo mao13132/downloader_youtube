@@ -24,16 +24,30 @@ from src.telegram.bot_core import user_bot_core
 
 class DownloadMp3:
     @staticmethod
-    async def wait_download(result_dict, message):
+    async def wait_download(result_dict, message, BotDB):
 
         id_user = message.chat.id
 
         while not result_dict['result']:
             await asyncio.sleep(3)
 
+        change_down_status = BotDB.update_user_key(id_user, 'down_status', 0)
+
         if result_dict['result'] == 'error':
 
-            if 'no attribute' in result_dict['error']:
+            try:
+                await message.bot.delete_message(id_user, result_dict['one_msg_id'])
+            except:
+                pass
+
+            if result_dict['error'] == 'big':
+                await Sendler_msg().new_sendler_message_call(message, f'Ваш mp3 файл весит больше 2-х гигабайт. '
+                                                                      f'Пожалуйста, укажите ссылку на другое видео 🫶',
+                                                             None)
+
+                return False
+
+            if 'no attribute' in str(result_dict['error']):
                 await Sendler_msg().new_sendler_message(message, f'У видео {result_dict["link"]} нет '
                                                                  f'{result_dict["filter"]}p.'
                                                                  f'Попробуйте выбрать другое качество', None)
@@ -44,29 +58,30 @@ class DownloadMp3:
             await Sendler_msg().new_sendler_message(message, f'У видео {result_dict["link"]} проблемы с данным mp3, '
                                                              f'попробуйте другое', None)
 
-            try:
-                await message.bot.delete_message(id_user, result_dict['one_msg_id'])
-            except:
-                pass
-
             return False
 
         mp3 = open(result_dict['result'], 'rb')
 
         try:
-            # await message.bot.send_document(id_user, mp3)
 
             me = await message.bot.me
 
-            # await message.bot.send_chat_action(id_user, ChatActions.UPLOAD_AUDIO)
-
             await user_bot_core.app.send_audio(f'@{me.username}', mp3, caption=id_user)
 
+            try:
+                await message.bot.delete_message(id_user, result_dict['one_msg_id'])
+            except:
+                pass
+
+            BotDB.plus_count_down(id_user)
+
         except Exception as es:
+            try:
+                delete_file(result_dict['result'])
 
-            delete_file(result_dict['result'])
-
-            delete_file(result_dict['video'])
+                delete_file(result_dict['video'])
+            except:
+                pass
 
             if 'File too large for uploading. Check telegram api limit' in str(es):
                 error = f'Размер видео превышает лимиты telegram по отправке файлов через ботов подробности ' \
@@ -106,9 +121,11 @@ class DownloadMp3:
         except:
             pass
 
-        delete_file(result_dict['result'])
+        try:
 
-        delete_file(result_dict['video'])
+            delete_file(result_dict['result'])
+        except:
+            pass
 
     @staticmethod
     def start_down(result_dict, test, _):
@@ -135,6 +152,8 @@ class DownloadMp3:
 
         id_user = result_dict['id_user']
 
+        message = result_dict['message']
+
         _filter = result_dict['filter']
 
         _dir = os.path.join(dir_project, 'down')
@@ -145,6 +164,17 @@ class DownloadMp3:
         try:
 
             video = yt_dlp.YoutubeDL(ydl_opts)
+
+            info_dict = video.extract_info(link, download=False)
+
+            file_size = info_dict['filesize'] if info_dict['filesize'] is not None else info_dict['filesize_approx']
+
+            if file_size > 2048000000:
+                result_dict['result'] = 'error'
+                result_dict['error'] = f'big'
+
+                return 'error'
+
             info_dict = video.extract_info(link, download=True)
             downloaded_file_path = video.prepare_filename(info_dict)
             video.close()
@@ -160,69 +190,3 @@ class DownloadMp3:
             return 'error'
 
         return downloaded_file_path
-
-    # @staticmethod
-    # async def download_mp3(result_dict):
-    #
-    #     _filter = result_dict['filter']
-    #
-    #     link = result_dict['link']
-    #
-    #     _dir = os.path.join(dir_project, 'down')
-    #
-    #     file_name_video = ''
-    #
-    #     for _try in range(6):
-    #
-    #         try:
-    #             video_create = YouTube(link, use_oauth=True, allow_oauth_cache=True)
-    #
-    #             video_stream = video_create.streams.filter(res=f'{_filter}p', subtype='mp4').first()
-    #
-    #             video = video_stream.download(output_path=_dir)
-    #
-    #             # video = YouTube(link).streams.filter(res=f'{_filter}p').first().download(output_path=_dir)
-    #
-    #             file_name_video = os.path.join(_dir, video_stream.default_filename)
-    #
-    #             mp3_filename = video.split('.')[0]
-    #
-    #             _mp3 = VideoFileClip(video)
-    #
-    #             _mp3.audio.write_audiofile(os.path.join(_dir, f"{mp3_filename}.mp3"))
-    #
-    #             _mp3.close()
-    #         except Exception as es:
-    #
-    #             if _try < 5:
-    #                 print(f'Ошибка mp3 {str(es)} делаю попытку {_try + 1}')
-    #
-    #                 time.sleep(60)
-    #
-    #                 index_filter = VIDEO_TYPE.index(str(_filter))
-    #
-    #                 try:
-    #                     _filter = VIDEO_TYPE[index_filter - 1]
-    #                 except:
-    #                     pass
-    #
-    #                 try:
-    #
-    #                     delete_file(file_name_video)
-    #
-    #                     delete_file(f'{mp3_filename}.mp3')
-    #                 except:
-    #                     pass
-    #
-    #                 continue
-    #
-    #             result_dict['result'] = 'error'
-    #             result_dict['error'] = f'Попытка mp3  {str(es)}'
-    #
-    #             return False
-    #
-    #         result_dict['result'] = f'{mp3_filename}.mp3'
-    #
-    #         result_dict['video'] = video
-    #
-    #         return True

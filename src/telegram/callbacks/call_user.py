@@ -81,13 +81,31 @@ async def download(call: types.CallbackQuery, state: FSMContext):
 
     id_user = call.message.chat.id
 
+    login = call.message.chat.username if call.message.chat.username is not None else call.message.chat.first_name
+
+    user_data = BotDB.get_user_data_from_id(id_user)
+
+    down_status = user_data[8]
+
+    if down_status != 0:
+        error = (f'⚠️ {login}, пожалуйста, <b>дождитесь</b>, пока скачается предыдущее видео')
+        print(error)
+
+        await Sendler_msg().new_sendler_message_call(call, error, Admin_keyb().start_keyb(id_user))
+
+        return False
+
     link = BotDB.get_link(id_pk)
+
+    change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
+
+    result_dict = {'result': False, 'filter': _filter, 'link': link, 'id_user': id_user, 'call': call}
 
     _msg = f'<b>Lizard качает ваше видео 🎬</b>\nЭто может занять от 10 секунд до 5 минут 🛜'
 
-    await Sendler_msg().sendler_photo_call(call, LOGO, _msg, None)
+    one_msg = await Sendler_msg().sendler_photo_call(call, LOGO, _msg, None)
 
-    result_dict = {'result': False, 'filter': _filter, 'link': link, 'id_user': id_user}
+    result_dict['one_msg_id'] = one_msg.message_id
 
     trh = threading.Thread(target=DownloadVideo.start_down,
                            args=(call, _filter, link, result_dict),
@@ -95,7 +113,7 @@ async def download(call: types.CallbackQuery, state: FSMContext):
 
     trh.start()
 
-    wait_download = asyncio.create_task(DownloadVideo.wait_download(result_dict, call))
+    wait_download = asyncio.create_task(DownloadVideo.wait_download(result_dict, call, BotDB))
 
 
 async def admin_panel(call: types.CallbackQuery, state: FSMContext):
@@ -127,7 +145,6 @@ async def admin_panel(call: types.CallbackQuery, state: FSMContext):
 
 
 async def users(call: types.CallbackQuery):
-
     await call.bot.answer_callback_query(call.id)
 
     await Sendler_msg.log_client_call(call)
