@@ -169,7 +169,8 @@ class DownloadVideo:
         _dir = os.path.join(dir_project, 'down')
 
         ydl_opts = {
-            'format': f'best[height<={_filter}]'
+            'format': f'best[height<={_filter}]',
+            'outtmpl': f'{result_dict["name_file"]}.mp4'
         }
 
         for _try in range(3):
@@ -177,7 +178,8 @@ class DownloadVideo:
             try:
                 if _try > 1:
                     ydl_opts = {
-                        'format': f'bestvideo+bestaudio/best'
+                        'format': f'bestvideo+bestaudio/best',
+                        'outtmpl': f'{result_dict["name_file"]}.mp4'
                     }
 
                 video = yt_dlp.YoutubeDL(ydl_opts)

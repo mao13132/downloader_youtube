@@ -1,4 +1,5 @@
 import asyncio
+import os
 import threading
 
 from aiogram import Dispatcher, types
@@ -227,7 +228,7 @@ async def add_link_mp3(message: Message, state: FSMContext):
 
         return False
 
-    name_file = video.title
+    name_file = f'down{os.sep}{video.title}'
 
     change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
 

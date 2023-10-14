@@ -129,7 +129,6 @@ class DownloadMp3:
 
     @staticmethod
     def start_down(result_dict, test, _):
-        # result = asyncio.run(DownloadMp3.download_mp3(result_dict))
         result = asyncio.run(DownloadMp3.new_download_mp3(result_dict))
 
         return True

@@ -4,6 +4,7 @@ import threading
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ChatActions
+from pytube import YouTube
 
 from src.telegram.logic.devision_msg import division_message
 from src.telegram.handlers.users import start
@@ -97,9 +98,14 @@ async def download(call: types.CallbackQuery, state: FSMContext):
 
     link = BotDB.get_link(id_pk)
 
+    video = YouTube(link)
+
+    name_file = f'down{os.sep}{video.title}'
+
     change_down_status = BotDB.update_user_key(id_user, 'down_status', 1)
 
-    result_dict = {'result': False, 'filter': _filter, 'link': link, 'id_user': id_user, 'call': call}
+    result_dict = {'result': False, 'filter': _filter, 'link': link, 'id_user': id_user, 'call': call,
+                   'name_file': name_file}
 
     _msg = f'<b>Lizard качает ваше видео 🎬</b>\nЭто может занять от 10 секунд до 5 минут 🛜'
 
